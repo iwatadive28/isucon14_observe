@@ -9,4 +9,13 @@ services:
       - "4317:4317"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
-      - LOG_LEVEL=debug
+
+  pprotein:
+    container_name: pprotein
+    build:
+      context: pprotein
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    volumes:
+      - "./pprotein/data:/data/data"
