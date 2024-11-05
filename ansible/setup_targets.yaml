@@ -1,0 +1,20 @@
+- name: Deploy agents
+  hosts: all
+  tasks:
+    - name: Import agent role
+      ansible.builtin.import_role:
+        name: agent
+
+- name: Deploy db config
+  hosts: all
+  tasks:
+    - name: Import mysql role
+      ansible.builtin.import_role:
+        name: mysql
+
+- name: Deploy nginx config
+  hosts: all
+  tasks:
+    - name: Import nginx role
+      ansible.builtin.import_role:
+        name: nginx
