@@ -3,24 +3,18 @@
     "Type": "pprof",
     "Label": "web",
     "URL": "http://isucon-server1:8080/debug/pprof/profile",
-    "Duration": 90
+    "Duration": 70
   },
   {
     "Type": "httplog",
     "Label": "nginx",
     "URL": "http://isucon-server1:19000/debug/log/httplog",
-    "Duration": 90
+    "Duration": 70
   },
   {
     "Type": "slowlog",
-    "Label": "mysql-pdns",
-    "URL": "http://isucon-server2:19000/debug/log/slowlog",
-    "Duration": 90
-  },
-  {
-    "Type": "slowlog",
-    "Label": "mysql-web",
-    "URL": "http://isucon-server3:19000/debug/log/slowlog",
-    "Duration": 90
+    "Label": "mysql",
+    "URL": "http://isucon-server1:19000/debug/log/slowlog",
+    "Duration": 70
   }
 ]

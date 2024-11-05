@@ -1,0 +1,14 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/universal:2",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"redhat.ansible"
+			],
+			"settings": {
+				"ansible.python.interpreterPath": "/home/codespace/.python/current/bin/python"
+			}
+		}
+	},
+	"postCreateCommand": "pip install ansible ansible-lint"
+}
