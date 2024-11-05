@@ -34,6 +34,10 @@ ansible-playbook -i inventory.yaml setup_targets.yaml
 
 監視対象のIPアドレス等の設定が必要。
 
+### 必須: pprotein/data/targets.json
+
+監視対象のIPアドレス・サービスのポート等の設定が必要。
+
 ### 任意: ansible/roles/mysql/files/etc/mysql/mysql.conf.d/mysqld.cnf
 
 slowlog以外のところはチューニングにも関与する。  
