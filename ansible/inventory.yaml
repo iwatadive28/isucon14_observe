@@ -1,0 +1,9 @@
+all:
+  hosts:
+    server1:
+      ansible_host: isucon-server1
+      ansible_user: ubuntu
+
+    server2:
+      ansible_host: isucon-server2
+      ansible_user: ubuntu
