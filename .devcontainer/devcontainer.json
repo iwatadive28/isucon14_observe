@@ -1,6 +1,14 @@
 {
 	"image": "mcr.microsoft.com/devcontainers/universal:2",
-	"features": {
-		"ghcr.io/hspaans/devcontainer-features/ansible-lint:1": {}
-	}
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"redhat.ansible"
+			],
+			"settings": {
+				"ansible.python.interpreterPath": "/home/codespace/.python/current/bin/python"
+			}
+		}
+	},
+	"postCreateCommand": "pip install ansible ansible-lint"
 }
