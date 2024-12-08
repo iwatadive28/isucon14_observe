@@ -136,4 +136,11 @@ CREATE TABLE coupons
   COMMENT 'クーポンテーブル';
 
 -- sql追記
-CREATE INDEX idx_ride_statuses_ride_id_created_at ON ride_statuses (ride_id, created_at)
+CREATE INDEX idx_ride_statuses_ride_id_created_at ON ride_statuses (ride_id, created_at);
+CREATE INDEX idx_chairs_access_token ON chairs (access_token);
+CREATE INDEX idx_rides_chair_id_updated_at ON rides (chair_id, updated_at);
+CREATE INDEX idx_rides_user_id_created_at ON rides (user_id, created_at);
+CREATE INDEX idx_chair_locations_chair_id_created_at ON chair_locations (chair_id, created_at);
+CREATE INDEX idx_users_id ON users (id);
+CREATE INDEX idx_users_access_token ON users (access_token);
+CREATE INDEX idx_coupons_used_by ON coupons (used_by);

@@ -11,6 +11,9 @@ import (
 	"os/exec"
 	"strconv"
 
+	"github.com/isucon/isucon14/webapp/go/isuutil"
+	// "./isuutil"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-sql-driver/mysql"
@@ -65,7 +68,7 @@ func setup() http.Handler {
 		panic(err)
 	}
 	db = _db
-
+	
 	// pprotain: Collect group data
 	go func() {
 		if _, err := http.Get("https://jubilant-palm-tree-j76r5v656j4hrj4-9000.app.github.dev/api/group/collect"); err != nil {
@@ -80,6 +83,9 @@ func setup() http.Handler {
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
 	mux.HandleFunc("POST /api/initialize", postInitialize)
+	
+	// Apply necessary indexes
+	// applyIndexes()
 
 	// app handlers
 	{
@@ -94,7 +100,6 @@ func setup() http.Handler {
 		authedMux.HandleFunc("GET /api/app/notification", appGetNotification)
 		authedMux.HandleFunc("GET /api/app/nearby-chairs", appGetNearbyChairs)
 	}
-
 	// owner handlers
 	{
 		mux.HandleFunc("POST /api/owner/owners", ownerPostOwners)
@@ -122,7 +127,26 @@ func setup() http.Handler {
 
 	return mux
 }
+/*
+func applyIndexes() {
+	indexQueries := []string{
+		"CREATE INDEX idx_ride_statuses_ride_id_created_at ON ride_statuses (ride_id, created_at)",
+		"CREATE INDEX idx_chairs_access_token ON chairs (access_token)",
+		"CREATE INDEX idx_rides_chair_id_updated_at ON rides (chair_id, updated_at)",
+		"CREATE INDEX idx_rides_user_id_created_at ON rides (user_id, created_at)",
+		"CREATE INDEX idx_chair_locations_chair_id_created_at ON chair_locations (chair_id, created_at)",
+		"CREATE INDEX idx_users_id ON users (id)",
+		"CREATE INDEX idx_users_access_token ON users (access_token)",
+		"CREATE INDEX idx_coupons_used_by ON coupons (used_by)",
+	}
 
+	for _, query := range indexQueries {
+		if err := isuutil.CreateIndexIfNotExists(db, query); err != nil {
+			slog.Error("failed to create index", "query", query, "error", err)
+		}
+	}
+}
+*/
 type postInitializeRequest struct {
 	PaymentServer string `json:"payment_server"`
 }
