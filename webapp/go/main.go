@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/isucon/isucon14/webapp/go/isuutil"
+	// "github.com/isucon/isucon14/webapp/go/isuutil"
 	// "./isuutil"
 
 	"github.com/go-chi/chi/v5"
