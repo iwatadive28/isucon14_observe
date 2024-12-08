@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"context"
+	"log"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -194,11 +196,44 @@ func chairGetNotification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback()
-	ride := &Ride{}
-	yetSentRideStatus := RideStatus{}
-	status := ""
 
-	if err := tx.GetContext(ctx, ride, `SELECT * FROM rides WHERE chair_id = ? ORDER BY updated_at DESC LIMIT 1`, chair.ID); err != nil {
+	type NotificationData struct {
+		RideID               string  `db:"ride_id"`
+		UserID               string  `db:"user_id"`
+		PickupLatitude       float64 `db:"pickup_latitude"`
+		PickupLongitude      float64 `db:"pickup_longitude"`
+		DestinationLatitude  float64 `db:"destination_latitude"`
+		DestinationLongitude float64 `db:"destination_longitude"`
+		StatusID             string  `db:"status_id"`
+		Status               string  `db:"status"`
+		Firstname            string  `db:"firstname"`
+		Lastname             string  `db:"lastname"`
+	}
+
+	data := NotificationData{}
+	query := `
+	SELECT 
+		r.id AS ride_id, 
+		r.user_id, 
+		r.pickup_latitude, 
+		r.pickup_longitude, 
+		r.destination_latitude, 
+		r.destination_longitude, 
+		rs.id AS status_id, 
+		rs.status, 
+		u.firstname, 
+		u.lastname 
+	FROM rides r 
+	LEFT JOIN ride_statuses rs 
+		ON rs.ride_id = r.id AND rs.chair_sent_at IS NULL 
+	LEFT JOIN users u 
+		ON u.id = r.user_id 
+	WHERE r.chair_id = ? 
+	ORDER BY r.updated_at DESC 
+	LIMIT 1;
+	`
+	err = tx.GetContext(ctx, &data, query, chair.ID)
+	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeJSON(w, http.StatusOK, &chairGetNotificationResponse{
 				RetryAfterMs: 30,
@@ -209,57 +244,33 @@ func chairGetNotification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.GetContext(ctx, &yetSentRideStatus, `SELECT * FROM ride_statuses WHERE ride_id = ? AND chair_sent_at IS NULL ORDER BY created_at ASC LIMIT 1`, ride.ID); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			status, err = getLatestRideStatus(ctx, tx, ride.ID)
+	// 非同期でステータス更新
+	if data.StatusID != "" {
+		go func(ctx context.Context, statusID string) {
+			_, err := db.ExecContext(ctx, `UPDATE ride_statuses SET chair_sent_at = CURRENT_TIMESTAMP(6) WHERE id = ?`, statusID)
 			if err != nil {
-				writeError(w, http.StatusInternalServerError, err)
-				return
+				log.Printf("Failed to update chair_sent_at: %v", err)
 			}
-		} else {
-			writeError(w, http.StatusInternalServerError, err)
-			return
-		}
-	} else {
-		status = yetSentRideStatus.Status
+		}(ctx, data.StatusID)
 	}
 
-	user := &User{}
-	err = tx.GetContext(ctx, user, "SELECT * FROM users WHERE id = ? FOR SHARE", ride.UserID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	if yetSentRideStatus.ID != "" {
-		_, err := tx.ExecContext(ctx, `UPDATE ride_statuses SET chair_sent_at = CURRENT_TIMESTAMP(6) WHERE id = ?`, yetSentRideStatus.ID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, err)
-			return
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		writeError(w, http.StatusInternalServerError, err)
-		return
-	}
-
+	// レスポンス
 	writeJSON(w, http.StatusOK, &chairGetNotificationResponse{
 		Data: &chairGetNotificationResponseData{
-			RideID: ride.ID,
+			RideID: data.RideID,
 			User: simpleUser{
-				ID:   user.ID,
-				Name: fmt.Sprintf("%s %s", user.Firstname, user.Lastname),
+				ID:   data.UserID,
+				Name: fmt.Sprintf("%s %s", data.Firstname, data.Lastname),
 			},
 			PickupCoordinate: Coordinate{
-				Latitude:  ride.PickupLatitude,
-				Longitude: ride.PickupLongitude,
+				Latitude:  int(data.PickupLatitude),  // 型変換
+				Longitude: int(data.PickupLongitude), // 型変換
 			},
 			DestinationCoordinate: Coordinate{
-				Latitude:  ride.DestinationLatitude,
-				Longitude: ride.DestinationLongitude,
+				Latitude:  int(data.DestinationLatitude),  // 型変換
+				Longitude: int(data.DestinationLongitude), // 型変換
 			},
-			Status: status,
+			Status: data.Status,
 		},
 		RetryAfterMs: 30,
 	})
