@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/kaz/pprotein/integration/standalone"
 )
 
 var db *sqlx.DB
@@ -64,6 +65,16 @@ func setup() http.Handler {
 		panic(err)
 	}
 	db = _db
+
+	// pprotain: Collect group data
+	go func() {
+		if _, err := http.Get("https://jubilant-palm-tree-j76r5v656j4hrj4-9000.app.github.dev/api/group/collect"); err != nil {
+			slog.Error("failed to communicate with pprotein", err)
+		}
+	}()
+
+	// pprotain: Open port 19001 for standalone integration
+	go standalone.Integrate(":19001")
 
 	mux := chi.NewRouter()
 	mux.Use(middleware.Logger)
