@@ -25,6 +25,15 @@
         remote_src: no  # ローカルからリモートへコピー
       become: true  # root権限で実行
 
+    - name: Copy the SQL schema file to the remote server
+      delegate_to: server1  # デプロイ先のサーバー
+      ansible.builtin.copy:
+        src: /workspaces/isucon14_observe/webapp/sql/1-schema.sql  # ローカルのSQLスキーマファイル
+        dest: /home/isucon/webapp/sql/1-schema.sql  # 本番サーバのデプロイ先ディレクトリ
+        mode: '0644'
+        remote_src: no  # ローカルからリモートへコピー
+      become: true  # root権限で実行
+
 - name: Restart the application on the remote server
   hosts: server1  # 本番サーバーでの操作
   become: true  # root権限で実行
