@@ -2,19 +2,19 @@
   {
     "Type": "pprof",
     "Label": "web",
-    "URL": "http://isucon-server1:8080/debug/pprof/profile",
+    "URL": "http://18.179.80.81:19001/debug/pprof/profile",
     "Duration": 70
   },
   {
     "Type": "httplog",
     "Label": "nginx",
-    "URL": "http://isucon-server1:19000/debug/log/httplog",
+    "URL": "http://18.179.80.81:19000/debug/log/httplog",
     "Duration": 70
   },
   {
     "Type": "slowlog",
     "Label": "mysql",
-    "URL": "http://isucon-server1:19000/debug/log/slowlog",
+    "URL": "http://18.179.80.81:19000/debug/log/slowlog",
     "Duration": 70
   }
 ]
