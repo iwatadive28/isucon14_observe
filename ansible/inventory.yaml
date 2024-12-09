@@ -1,9 +1,16 @@
 all:
   hosts:
     server1:
-      ansible_host: isucon-server1
-      ansible_user: ubuntu
+      ansible_host: 18.179.80.81
+      ansible_user: isucon
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa_kiwsa
 
-    server2:
-      ansible_host: isucon-server2
-      ansible_user: ubuntu
+#     server2:
+#       ansible_host: 52.194.131.50
+#       ansible_user: isucon
+#       ansible_ssh_private_key_file: ~/.ssh/id_rsa_kiwsa
+
+#     server3:
+#       ansible_host: 18.181.89.66
+#       ansible_user: isucon
+#       ansible_ssh_private_key_file: ~/.ssh/id_rsa_kiwsa
