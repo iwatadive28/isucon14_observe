@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
-	"context"
 	"log"
+	"math"
+	"net/http"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -113,6 +114,24 @@ func chairPostCoordinate(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
+	previousLocation := &ChairLocation{}
+	if err := tx.GetContext(ctx, previousLocation, `SELECT * FROM chair_locations WHERE chair_id = ? ORDER BY created_at DESC LIMIT 1`, chair.ID); err != nil {
+		previousLocation = nil
+	}
+
+	distance := &ChairDistance{}
+	if err := tx.GetContext(ctx, distance, `SELECT * FROM chair_distances WHERE chair_id = ?`, chair.ID); err != nil {
+		distance = nil
+	}
+
+	var totalDistance = int(math.Abs(float64(req.Latitude-previousLocation.Latitude))) + int(math.Abs(float64(req.Longitude-previousLocation.Longitude)))
+	// if previousLocation != nil {
+	// 	totalDistance = previousLocation.TotalDistance + int(math.Abs(float64(req.Latitude-previousLocation.Latitude))) + int(math.Abs(float64(req.Longitude-previousLocation.Longitude)))
+	// }
+	if distance != nil {
+		totalDistance += distance.TotalDistance
+	}
+
 	chairLocationID := ulid.Make().String()
 	if _, err := tx.ExecContext(
 		ctx,
@@ -125,6 +144,15 @@ func chairPostCoordinate(w http.ResponseWriter, r *http.Request) {
 
 	location := &ChairLocation{}
 	if err := tx.GetContext(ctx, location, `SELECT * FROM chair_locations WHERE id = ?`, chairLocationID); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if _, err := tx.ExecContext(
+		ctx,
+		`INSERT INTO chair_distances (chair_id, total_distance, updated_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE total_distance = ?, updated_at = ?`,
+		chair.ID, totalDistance, location.CreatedAt, totalDistance, location.CreatedAt,
+	); err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
